@@ -2,7 +2,7 @@
 <header class="header header--loggedIn">
     <div class="container">
       <a href="{% url 'home' %}" class="header__logo">
-        <img src="{% static 'images/logo.svg' %}" />
+        <img src="{% static 'images/logo-2.png' %}" />
         <h1>MindSpirits</h1>
       </a>
       <form class="header__search" method="GET" action="{% url 'home' %}">
@@ -23,7 +23,7 @@
         <div class="header__user">
           <a href="{% url 'update-user' %}">
             <div class="avatar avatar--medium active">
-              <img src="https://randomuser.me/api/portraits/men/37.jpg" />
+              <img src="{{request.user.avatar.url}}" />
             </div>
             <p>{{user.username}}<span>@{{request.user.username}}</span></p>
           </a>

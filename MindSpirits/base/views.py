@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .models import Room, Topic, message
+from .models import Room, Topic, message, User  
 from django.http import HttpResponse,HttpResponseRedirect
 from django.contrib.auth.decorators import login_required 
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login,logout
-from django.contrib.auth.forms import UserCreationForm
 from django.db.models import Q
-from .forms import RoomForm, UserForm
+from .forms import RoomForm, UserForm, MyUserCreationForm
+
 
 # rooms = [
 #     {'id':1, 'name': "Let's learn python"},
@@ -23,27 +22,25 @@ def loginPage(request):
     page = 'login'
     if request.user.is_authenticated:
         return redirect('home')
-    
-    if request.method == "POST":
-        username = request.POST.get('username').lower()
+
+    if request.method == 'POST':
+        email = request.POST.get('email').lower()
         password = request.POST.get('password')
-        
+
         try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-           messages.error(request, 'User does not exist')
-           return render(request, 'base/login_register.html', {})
-      
-           
-        user = authenticate(request, username=username, password=password)
-        
+            user = User.objects.get(email=email)
+        except:
+            messages.error(request, 'User does not exist')
+
+        user = authenticate(request, email=email, password=password)
+
         if user is not None:
             login(request, user)
             return redirect('home')
         else:
-            messages.error(request, 'Username OR password are incorrect')
-          
-    context={'page' : page} 
+            messages.error(request, 'Username OR password does not exit')
+
+    context = {'page': page}
     return render(request, 'base/login_register.html', context)
 
 # log out 
@@ -54,10 +51,10 @@ def logoutUser(request):
 
 # Register page
 def registerPage(request):
-    form = UserCreationForm()
+    form = MyUserCreationForm()
     
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = MyUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.username = user.username.lower()
@@ -170,17 +167,45 @@ def deleteRoom(request, pk):
     return render(request, 'base/delete.html', {'obj':room})
 
 
-# Deleting messages
+# # Deleting messages
+# @login_required(login_url='login') 
+# def deleteMessage(request, pk):
+#     Message = message.objects.get(id=pk)
+    
+#     if request.user != Message.user:
+#         return HttpResponse('You are not allowed here')
+#     if request.method == 'POST':
+#         room_id = Message.room.id
+#         Message.delete()
+#         return redirect('room', pk=room_id)
+#     return render(request, 'base/delete.html', {'obj':Message})
+
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.http import HttpResponse
+
 @login_required(login_url='login') 
 def deleteMessage(request, pk):
-    Message = message.objects.get(id=pk)
-    
-    if request.user != Message.user:
-        return HttpResponse('You are not allowed here')
+    # Get the message object safely or return 404
+    message_obj = get_object_or_404(message, id=pk)
+
+    # Ensure only the message owner can delete it
+    if request.user != message_obj.user:
+        return HttpResponse('You are not allowed here', status=403)
+
+    # Handle the POST request to delete the message
     if request.method == 'POST':
-        Message.delete()
-        return redirect('home')
-    return render(request, 'base/delete.html', {'obj':Message})
+        message_obj.delete()
+
+        # Determine where to redirect based on 'next' parameter
+        next_url = request.GET.get('next')
+        if next_url:
+            return redirect(next_url)
+        return redirect(reverse('home'))  # Default to home if 'next' is not provided
+
+    # Render the confirmation page
+    return render(request, 'base/delete.html', {'obj': message_obj})
+
 
 
 # Updating users
