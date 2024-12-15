@@ -1,4 +1,4 @@
-import os
+
 
 from pathlib import Path
 
@@ -115,12 +115,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = BASE_DIR / "MindSpirits" / "staticfiles" 
 STATIC_URL = '/static/'
 MEDIA_URL = '/images/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static'
+    BASE_DIR / "MindSpirits" / "static",  # Path to static in second MindSpirits folder
 ]
 
 MEDIA_ROOT = BASE_DIR / 'static/images'
